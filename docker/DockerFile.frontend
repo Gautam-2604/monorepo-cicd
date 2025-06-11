@@ -1,0 +1,26 @@
+FROM node:20-alpine
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /usr/src/app
+
+
+ARG DATABASE_URL
+
+
+COPY ./package.json ./package.json
+COPY ./turbo.json ./turbo.json
+COPY ./pnpm-lock.yaml ./pnpm-lock.yaml
+
+
+COPY ./packages ./packages
+COPY ./apps/web ./apps/web
+
+RUN pnpm install
+
+RUN pnpm run db:generate
+#running db locally while building everytime
+RUN DATABASE_URL=${DATABASE_URL} pnpm run build
+
+EXPOSE 3000
+CMD ["pnpm", "run", "start:web"]
